@@ -187,9 +187,21 @@ router.get("/update", async function(req, res) {
     }
     const token = session.token;
     const user = await profiles.findOne({token: token});
+    const validator = require("email-validator");
+    const isTrue = validator.validate(req.query.email)
+    const user = await profiles.findOne({email: req.query.email});
+    const user2 = await profiles.findOne({username: req.query.username});
     if (user) {
         await profiles.updateOne({token: token}, {$set: {password: req.query.password, username: req.query.username, email: req.query.email, bio: req.query.bio, avatar: req.query.avatar, banner: req.query.banner, about: req.query.about, socials: {github: req.query.github, twitter: req.query.twitter, instagram: req.query.instagram, linkedin: req.query.linkedin}}});
         res.redirect('/me');
+    }
+    if (isTrue == false) {
+        let error = "Email doesn't exist!"
+        res.redirect(`/error?e=${error}&b=/create`);
+    }
+    if (user || user2) {
+        let error = "Email or username already in use!"
+        res.redirect(`/error?e=${error}&b=/create`);
     }
     else {
         res.redirect('/login')
@@ -210,6 +222,9 @@ router.get("/publish", async function(req, res) {
         let error = "Image URL is invalid!"
         res.redirect(`/error?e=${error}&b=/`)
         return
+    }if (user || user2) {
+        let error = "Email or username already in use!"
+        res.redirect(`/error?e=${error}&b=/create`);
     }
     if (user) {
         const postID = Math.floor(Math.random() * (99000 - 10000) + 10000);
